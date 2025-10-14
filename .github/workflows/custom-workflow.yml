@@ -32,3 +32,6 @@ jobs:
           app_location: "/"        # where package.json is
           api_location: ""         # leave blank if no Azure Functions
           output_location: "dist"  # Vite default build folder
+        env:
+          VITE_FUNCTION_HOST: "spa-function-ffgpgpf0g0fxcqd6.northeurope-01.azurewebsites.net"
+          VITE_FUNCTION_KEY: ${{ secrets.AZURE_FUNCTION_KEY }}
