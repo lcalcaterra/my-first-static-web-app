@@ -17,6 +17,7 @@ export default function UploadPage() {
 
   const handleUpload = async () => {
     if (!file) {
+      console.log("no file uploaded");
       setUploadMessage("no file uploaded");
       return;
     }
@@ -37,17 +38,21 @@ export default function UploadPage() {
       const data = await res.json();
 
       if (data.status === "Upload succeeded") {
+        console.log("File uploaded successfully");
         setUploadMessage(`File '${data.filename}' uploaded successfully!`);
       } else {
+        console.log("Upload Failed");
         setUploadMessage("Upload Failed");
       }
     } catch (err) {
+      console.log("Upload Failed");
       setUploadMessage("Upload Failed");
     }
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
+      console.log("notthing to search");
       setSearchMessage("notting to search");
       return;
     }
@@ -64,8 +69,10 @@ export default function UploadPage() {
       }
 
       const data = await res.json();
+      console.log("Can't search. Retry later");
       setSearchMessage(data.reply || "Can't search. Retry later");
     } catch (err) {
+      console.log("Can't search. Retry later");
       setSearchMessage("Can't search. Retry later");
     }
   };

@@ -3,8 +3,6 @@ import "./LoginPage.css";
 
 const API_BASE = `https://${import.meta.env.VITE_FUNCTION_HOST}`;
 const API_KEY = import.meta.env.VITE_FUNCTION_KEY;
-console.log("HOST:", import.meta.env.VITE_FUNCTION_HOST);
-console.log("KEY:", import.meta.env.VITE_FUNCTION_KEY);
 
 export default function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState("");
@@ -16,6 +14,7 @@ export default function LoginPage({ onLoginSuccess }) {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
+      console.log("Please provide username and password");
       setError("Please provide username and password");
       return;
     }
@@ -34,12 +33,15 @@ export default function LoginPage({ onLoginSuccess }) {
       const data = await response.json();
 
       if (data.status === "OK") {
+        console.log("Login Succeded");
         onLoginSuccess();
       } else {
+        console.log("User not registered or wrong credentials");
         setError("User not registered or wrong credentials");
       }
     } catch (err) {
       console.error(err);
+      console.log("Server error, please try again later");
       setError("Server error, please try again later");
     } finally {
       setLoading(false);

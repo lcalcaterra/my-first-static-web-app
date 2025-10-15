@@ -29,12 +29,22 @@ I push aggiornano anche l'applicazione ma dev'essere presente il file `.github/w
 **NB:** nel caso di applicazioni **React/Vite**, il file `.yml` dev'essere modificato aggiungendo le varibili d'ambiente all'interno (*attenzione, non si possono mettere secret in chiaro*), perché la build impacchetta anche le variabili d'ambiente che altrimenti non sarebbero lette dalla sezione *Env Vars* nella pagina del portale Azure.
 ```
 env:
-    VITE_FUNCTION_HOST: "spa-function-ffgpgpf0g0fxcqd6.northeurope-01.azurewebsites.net"
+    VITE_FUNCTION_HOST: "<azure-function-host>.azurewebsites.net"
     VITE_FUNCTION_KEY: ${{ secrets.AZURE_FUNCTION_KEY }}
 ```
+I secret vanno creati nella repository GitHub seguendo il path *Settings > Security > Secrets and variables > Actions > New repository secret*.
+
 
 ## La Azure Function
 
 La Azure Function deve prevedere l'abilitazione dei **CORS** per il traffico locale e dalla Static Web App.
 
 La Azure Function supporto l'utilizzo delle variabili d'ambiente tramite la sezione *Env Vars* del portale; tuttavia, è importante definirle **prima** di fare deploy del codice, altrimenti non si vedrà un errore tra i log ma ci sarà un errore (fidati) e non si vedrà alcuna function deployata.
+
+
+## L'architettura
+
+L'architettura da realizzare è riportata in questa immagine.
+![Immagine non disponibile](Architettura.png)
+
+In aggiunta, è presente un [documento](risorse.xlsx) dedicato ai costi ed alle specifiche risorse per realizzare una applicazione simile utilizzata da pochi utenti.
