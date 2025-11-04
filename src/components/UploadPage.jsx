@@ -1,24 +1,29 @@
 import React, { useState } from "react";
 import "./UploadPage.css";
 
-const API_BASE = `https://${import.meta.env.VITE_FUNCTION_HOST}`;
-const API_KEY = import.meta.env.VITE_FUNCTION_KEY;
-
-export default function UploadPage() {
+export default function UploadPage({ onLogout }) {
   const [file, setFile] = useState(null);
   const [uploadMessage, setUploadMessage] = useState("");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchMessage, setSearchMessage] = useState("");
 
   const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-    setUploadMessage(""); // clear previous messages
+    const selected = e.target.files[0];
+    if (selected && selected.size > 10 * 1024 * 1024) {
+      setUploadMessage("File too large (max 10 MB)");
+      return;
+    }
+    if (selected && !selected.type.startsWith("text/") && !selected.type.startsWith("application/")) {
+      setUploadMessage("Invalid file type");
+      return;
+    }
+    setFile(selected);
+    setUploadMessage("");
   };
 
   const handleUpload = async () => {
     if (!file) {
-      console.log("no file uploaded");
-      setUploadMessage("no file uploaded");
+      setUploadMessage("No file selected");
       return;
     }
 
@@ -26,68 +31,75 @@ export default function UploadPage() {
     formData.append("file", file);
 
     try {
-      const res = await fetch(`${API_BASE}/api/storage/upload?code=${API_KEY}`, {
+      const res = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
+        credentials: "include",
       });
-
-      if (!res.ok) {
-        throw new Error("Upload Failed");
-      }
 
       const data = await res.json();
 
-      if (data.status === "Upload succeeded") {
-        console.log("File uploaded successfully");
+      if (res.ok && data.status === "Upload succeeded") {
         setUploadMessage(`File '${data.filename}' uploaded successfully!`);
+        sendLog(`Upload succeeded: ${data.filename}`);
       } else {
-        console.log("Upload Failed");
-        setUploadMessage("Upload Failed");
+        throw new Error("Upload failed");
       }
     } catch (err) {
-      console.log("Upload Failed");
-      setUploadMessage("Upload Failed");
+      setUploadMessage("Upload failed");
+      sendLog(`Upload error: ${err.message}`);
     }
   };
 
   const handleSearch = async () => {
     if (!searchQuery.trim()) {
-      console.log("notthing to search");
-      setSearchMessage("notting to search");
+      setSearchMessage("Nothing to search");
       return;
     }
 
     try {
-      const res = await fetch(`${API_BASE}/api/ai/search?code=${API_KEY}`, {
+      const res = await fetch("/api/ai/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({ query: searchQuery }),
       });
 
-      if (!res.ok) {
-        throw new Error("Can't search. Retry later");
-      }
-
       const data = await res.json();
-      console.log("Can't search. Retry later");
-      setSearchMessage(data.reply || "Can't search. Retry later");
+
+      if (res.ok && data.status === "success") {
+        setSearchMessage(data.reply);
+        sendLog(`Search success for query: ${searchQuery}`);
+      } else {
+        throw new Error("Search failed");
+      }
     } catch (err) {
-      console.log("Can't search. Retry later");
       setSearchMessage("Can't search. Retry later");
+      sendLog(`Search error: ${err.message}`);
     }
   };
 
-  const getColor = (message, type) => {
+  const sendLog = async (message) => {
+    try {
+      await fetch("/api/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ log: message }),
+      });
+    } catch {}
+  };
+
+  const handleLogout = async () => {
+    await fetch("/api/users/logout", { method: "POST", credentials: "include" });
+    onLogout();
+  };
+
+  const getColor = (message) => {
     if (!message) return {};
-    if (
-      message.toLowerCase().includes("failed") ||
-      message.toLowerCase().includes("can't") ||
-      message.toLowerCase().includes("no file") ||
-      message.toLowerCase().includes("notting")
-    ) {
-      return { color: "red" };
-    }
-    return { color: "green" };
+    return message.toLowerCase().includes("failed") || message.toLowerCase().includes("can't")
+      ? { color: "red" }
+      : { color: "green" };
   };
 
   return (
@@ -95,7 +107,7 @@ export default function UploadPage() {
       <h1>Upload Your File</h1>
       <input type="file" onChange={handleFileChange} />
       <button onClick={handleUpload}>Upload</button>
-      <div style={getColor(uploadMessage, "upload")}>{uploadMessage}</div>
+      <div style={getColor(uploadMessage)}>{uploadMessage}</div>
 
       <div className="search-section">
         <input
@@ -108,8 +120,12 @@ export default function UploadPage() {
           }}
         />
         <button onClick={handleSearch}>Search</button>
-        <div style={getColor(searchMessage, "search")}>{searchMessage}</div>
+        <div style={getColor(searchMessage)}>{searchMessage}</div>
       </div>
+
+      <button className="logout-btn" onClick={handleLogout}>
+        Logout
+      </button>
     </div>
   );
 }

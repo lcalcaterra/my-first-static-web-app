@@ -1,9 +1,6 @@
 import React, { useState } from "react";
 import "./LoginPage.css";
 
-const API_BASE = `https://${import.meta.env.VITE_FUNCTION_HOST}`;
-const API_KEY = import.meta.env.VITE_FUNCTION_KEY;
-
 export default function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
@@ -14,8 +11,14 @@ export default function LoginPage({ onLoginSuccess }) {
     e.preventDefault();
 
     if (!username.trim() || !password.trim()) {
-      console.log("Please provide username and password");
       setError("Please provide username and password");
+      return;
+    }
+
+    // Validazione minima lato client
+    const validUsername = /^[a-zA-Z0-9_]{3,20}$/.test(username);
+    if (!validUsername) {
+      setError("Invalid username format");
       return;
     }
 
@@ -23,28 +26,39 @@ export default function LoginPage({ onLoginSuccess }) {
     setLoading(true);
 
     try {
-      const response = await fetch(`${API_BASE}/api/users/login?code=${API_KEY}`, {
+      const response = await fetch("/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ "username": username, "password": password }),
+        credentials: "include", // necessario per cookie HttpOnly
+        body: JSON.stringify({ username, password }),
       });
 
-      // Assuming your API responds with JSON like { status: "OK" } or { status: "KO" }
       const data = await response.json();
 
       if (data.status === "OK") {
-        console.log("Login Succeded");
         onLoginSuccess();
       } else {
-        console.log("User not registered or wrong credentials");
-        setError("User not registered or wrong credentials");
+        setError("Invalid credentials");
+        sendLog(`Login failed for ${username}`);
       }
     } catch (err) {
-      console.error(err);
-      console.log("Server error, please try again later");
       setError("Server error, please try again later");
+      sendLog(`Login exception: ${err.message}`);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const sendLog = async (message) => {
+    try {
+      await fetch("/api/logs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ log: message }),
+      });
+    } catch {
+      // in caso di errore nel logging, non bloccare l'app
     }
   };
 
