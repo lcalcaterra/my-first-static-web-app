@@ -38,8 +38,7 @@ export default function UploadPage({ onLogout }) {
       const res = await fetch("/api/storage/upload", {
         method: "POST",
         body: formData,
-        credentials: "include",
-        authLevel: 'anonymous'
+        credentials: "include"
       });
 
       const data = await res.json();
@@ -67,7 +66,6 @@ export default function UploadPage({ onLogout }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        authLevel: 'anonymous',
         body: JSON.stringify({ query: searchQuery }),
       });
 
@@ -91,7 +89,6 @@ export default function UploadPage({ onLogout }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        authLevel: 'anonymous',
         body: JSON.stringify({
           message,
           level,
