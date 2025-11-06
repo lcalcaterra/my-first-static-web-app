@@ -9,11 +9,15 @@ export default function UploadPage({ onLogout }) {
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
-    if (selected && selected.size > 10 * 1024 * 1024) {
-      setUploadMessage("File too large (max 10 MB)");
+    if (selected && selected.size > 20 * 1024 * 1024) {
+      setUploadMessage("File too large (max 20 MB)");
       return;
     }
-    if (selected && !selected.type.startsWith("text/") && !selected.type.startsWith("application/")) {
+    if (
+      selected &&
+      !selected.type.startsWith("text/") &&
+      !selected.type.startsWith("application/")
+    ) {
       setUploadMessage("Invalid file type");
       return;
     }
@@ -41,13 +45,13 @@ export default function UploadPage({ onLogout }) {
 
       if (res.ok && data.status === "Upload succeeded") {
         setUploadMessage(`File '${data.filename}' uploaded successfully!`);
-        sendLog(`Upload succeeded: ${data.filename}`);
+        sendLog(`Upload succeeded: ${data.filename}`, "info");
       } else {
         throw new Error("Upload failed");
       }
     } catch (err) {
       setUploadMessage("Upload failed");
-      sendLog(`Upload error: ${err.message}`);
+      sendLog(`Upload error: ${err.message}`, "error");
     }
   };
 
@@ -69,25 +73,30 @@ export default function UploadPage({ onLogout }) {
 
       if (res.ok && data.status === "success") {
         setSearchMessage(data.reply);
-        sendLog(`Search success for query: ${searchQuery}`);
+        sendLog(`Search success for query: ${searchQuery}`, "info");
       } else {
         throw new Error("Search failed");
       }
     } catch (err) {
       setSearchMessage("Can't search. Retry later");
-      sendLog(`Search error: ${err.message}`);
+      sendLog(`Search error: ${err.message}`, "error");
     }
   };
 
-  const sendLog = async (message) => {
+  const sendLog = async (message, level = "info") => {
     try {
       await fetch("/api/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ log: message }),
+        body: JSON.stringify({
+          message,
+          level,
+        }),
       });
-    } catch {}
+    } catch {
+      // do not block app on log errors
+    }
   };
 
   const handleLogout = async () => {
@@ -97,7 +106,8 @@ export default function UploadPage({ onLogout }) {
 
   const getColor = (message) => {
     if (!message) return {};
-    return message.toLowerCase().includes("failed") || message.toLowerCase().includes("can't")
+    return message.toLowerCase().includes("failed") ||
+      message.toLowerCase().includes("can't")
       ? { color: "red" }
       : { color: "green" };
   };

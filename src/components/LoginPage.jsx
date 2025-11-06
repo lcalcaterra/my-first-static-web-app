@@ -15,8 +15,7 @@ export default function LoginPage({ onLoginSuccess }) {
       return;
     }
 
-    // Validazione minima lato client
-    const validUsername = /^[a-zA-Z0-9_]{3,20}$/.test(username);
+    const validUsername = /^[a-zA-Z0-9_]{3,16}$/.test(username);
     if (!validUsername) {
       setError("Invalid username format");
       return;
@@ -29,7 +28,7 @@ export default function LoginPage({ onLoginSuccess }) {
       const response = await fetch("/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include", // necessario per cookie HttpOnly
+        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
 
@@ -39,26 +38,29 @@ export default function LoginPage({ onLoginSuccess }) {
         onLoginSuccess();
       } else {
         setError("Invalid credentials");
-        sendLog(`Login failed for ${username}`);
+        sendLog(`Login failed for ${username}`, "error");
       }
     } catch (err) {
       setError("Server error, please try again later");
-      sendLog(`Login exception: ${err.message}`);
+      sendLog(`Login exception: ${err.message}`, "error");
     } finally {
       setLoading(false);
     }
   };
 
-  const sendLog = async (message) => {
+  const sendLog = async (message, level = "info") => {
     try {
       await fetch("/api/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ log: message }),
+        body: JSON.stringify({
+          message,
+          level,
+        }),
       });
     } catch {
-      // in caso di errore nel logging, non bloccare l'app
+      // don't block app if log sending fails
     }
   };
 
