@@ -75,7 +75,7 @@ def login(req: LoginRequest):
         value=token,
         httponly=True,
         secure=True,
-        samesite="Strict",
+        samesite="None",
         max_age=3600,
         path="/"
     )
