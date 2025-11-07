@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./LoginPage.css";
+import { saveToken } from "../auth";
 
 export default function LoginPage({ onLoginSuccess }) {
   const [username, setUsername] = useState("");
@@ -28,13 +29,13 @@ export default function LoginPage({ onLoginSuccess }) {
       const response = await fetch("/api/users/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
         body: JSON.stringify({ username, password }),
       });
 
       const data = await response.json();
 
-      if (data.status === "OK") {
+      if (response.ok && data.status === "OK" && data.access_token) {
+        saveToken(data.access_token);
         onLoginSuccess();
       } else {
         setError("Invalid credentials");
@@ -53,14 +54,10 @@ export default function LoginPage({ onLoginSuccess }) {
       await fetch("/api/logs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          message,
-          level,
-        }),
+        body: JSON.stringify({ message, level }),
       });
     } catch {
-      // don't block app if log sending fails
+      // ignore
     }
   };
 

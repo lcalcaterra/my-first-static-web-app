@@ -3,7 +3,7 @@
 Questa repository contiene un esempio basilare di Azure Static Web App (nello specifico di una *Single Page Application*).
 
 La soluzione realizzata si propone di esporre un frontend che permette un login ed a seguito del login eseguire due attività: upload di un file su storage account e interrogazione di  una istanza AI.
-Il login è possibile appoggiandosi alle informazioni presenti in un indice Elasticsearch.
+Il login è possibile appoggiandosi alle informazioni presenti all'interno di un indice Elasticsearch.
 
 La soluzione completa si basa su due repository:
 
@@ -26,13 +26,13 @@ Fare il push della repository **prima** di creare la risorsa Azure. La risorsa p
 
 I push aggiornano anche l'applicazione ma dev'essere presente il file `.github/workflows/*.yml` all'interno della repository, altrimenti questo processo non funzionerà. Questa cartella permette di creare una GitHub Action che esegue questa attività.
 
-**NB:** nel caso di applicazioni **React/Vite**, il file `.yml` dev'essere modificato aggiungendo le varibili d'ambiente all'interno (*attenzione, non si possono mettere secret in chiaro*), perché la build impacchetta anche le variabili d'ambiente che altrimenti non sarebbero lette dalla sezione *Env Vars* nella pagina del portale Azure.
+**NB:** nel caso di applicazioni **React/Vite**, il file `.yml` dev'essere modificato indicando come *output location* ```dist``` anziché *build*, questo perché con Vite il pacchetto ha questo nome.
 ```
-env:
-    VITE_FUNCTION_HOST: "<azure-function-host>.azurewebsites.net"
-    VITE_FUNCTION_KEY: ${{ secrets.AZURE_FUNCTION_KEY }}
+output_location: "dist"
 ```
-I secret vanno creati nella repository GitHub seguendo il path *Settings > Security > Secrets and variables > Actions > New repository secret*.
+
+In seguito al deploy dev'essere collegata la Function App in modo tale che possa essere utilizzata in maniera sicura dalla Static Web App di frontend.
+Dalla sezione **Settings** > **API** della Web App è possibile creare il collegamento.
 
 
 ## La Azure Function
@@ -40,6 +40,9 @@ I secret vanno creati nella repository GitHub seguendo il path *Settings > Secur
 La Azure Function deve prevedere l'abilitazione dei **CORS** per il traffico locale e dalla Static Web App.
 
 La Azure Function supporto l'utilizzo delle variabili d'ambiente tramite la sezione *Env Vars* del portale; tuttavia, è importante definirle **prima** di fare deploy del codice, altrimenti non si vedrà un errore tra i log ma ci sarà un errore (fidati) e non si vedrà alcuna function deployata.
+
+Una volta collegata la Static Web App, sarà visibile nella sezione **Authentication** della Function App. Inoltre, sarà possibile impostare l'autenticazione in modo tale che la function non sia raggiungibile da altri servizi al di fuori della Static Web App, rendendo il backend sicuro.
+![Immagine non disponibile](Authentication.png)
 
 
 ## L'architettura

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import "./UploadPage.css";
+import { authHeaders, clearToken } from "../auth";
 
 export default function UploadPage({ onLogout }) {
   const [file, setFile] = useState(null);
@@ -9,8 +10,8 @@ export default function UploadPage({ onLogout }) {
 
   const handleFileChange = (e) => {
     const selected = e.target.files[0];
-    if (selected && selected.size > 20 * 1024 * 1024) {
-      setUploadMessage("File too large (max 20 MB)");
+    if (selected && selected.size > 10 * 1024 * 1024) {
+      setUploadMessage("File too large (max 10 MB)");
       return;
     }
     if (
@@ -37,8 +38,8 @@ export default function UploadPage({ onLogout }) {
     try {
       const res = await fetch("/api/storage/upload", {
         method: "POST",
+        headers: { ...authHeaders() },
         body: formData,
-        credentials: "include"
       });
 
       const data = await res.json();
@@ -64,8 +65,7 @@ export default function UploadPage({ onLogout }) {
     try {
       const res = await fetch("/api/ai/search", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
+        headers: { "Content-Type": "application/json", ...authHeaders() },
         body: JSON.stringify({ query: searchQuery }),
       });
 
@@ -87,20 +87,16 @@ export default function UploadPage({ onLogout }) {
     try {
       await fetch("/api/logs", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        credentials: "include",
-        body: JSON.stringify({
-          message,
-          level,
-        }),
+        headers: { "Content-Type": "application/json", ...authHeaders() },
+        body: JSON.stringify({ message, level }),
       });
     } catch {
-      // do not block app on log errors
+      // ignore
     }
   };
 
   const handleLogout = async () => {
-    await fetch("/api/users/logout", { method: "POST", credentials: "include" });
+    clearToken();
     onLogout();
   };
 
