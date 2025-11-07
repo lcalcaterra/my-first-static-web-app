@@ -15,7 +15,6 @@ from src.models.ai import SearchRequest
 from src.models.logs import LogRequest
 
 from src.utils.logger import get_logger, send_logs
-from src.utils.security import verify_user
 
 logger = get_logger(__name__)
 
@@ -38,7 +37,6 @@ def get_index_api(index_name: str):
 
 # Specific User Index
 USER_INDEX = os.getenv("USER_INDEX", "users")
-SECRET_KEY = os.getenv("JWT_SECRET", "")
 
 @router.post("/users/login")
 def login(req: LoginRequest):
@@ -62,60 +60,10 @@ def login(req: LoginRequest):
     if req.password != user_doc["password"]: # rimuovere questa linea
         return {"status": "KO"}
 
-    # Crea token JWT
-    token = jwt.encode(
-        {"sub": req.username, "exp": datetime.datetime.utcnow() + datetime.timedelta(hours=1)},
-        SECRET_KEY,
-        algorithm="HS256"
-    )
-
-    response = JSONResponse(content={"status": "OK"})
-    response.set_cookie(
-        key="session",
-        value=token,
-        httponly=True,
-        secure=True,
-        samesite="None",
-        max_age=3600,
-        path="/"
-    )
-    return response
-
-
-@router.get("/users/session")
-async def check_session(request: Request):
-    """
-    Verifica se l'utente è autenticato.
-    Usa il cookie HttpOnly 'session' e decode del JWT.
-    """
-    try:
-        username = verify_user(request)
-        return {"authenticated": True, "username": username}
-    except HTTPException:
-        # verify_user alza 401 in caso di token invalido
-        return {"authenticated": False}
-
-
-@router.post("/users/logout")
-async def logout():
-    """
-    Invalida la sessione rimuovendo il cookie JWT.
-    """
-    response = JSONResponse(content={"status": "logged out"})
-    response.delete_cookie(
-        key="session",
-        path="/",
-        secure=True,
-        httponly=True,
-        samesite="Strict"
-    )
-    return response
-
 
 # Azure Storage Account
 @router.post("/storage/upload")
 async def upload_file(request: Request, file: UploadFile = File(...)):
-    username = verify_user(request)
     if not file.filename:
         raise HTTPException(status_code=400, detail="Missing filename")
     try:
@@ -131,7 +79,6 @@ async def upload_file(request: Request, file: UploadFile = File(...)):
 AZURE_OPENAI_DEPLOYMENT = os.getenv("AZURE_OPENAI_DEPLOYMENT")
 @router.post("/ai/search")
 async def search(search_req: SearchRequest, request: Request):
-    username = verify_user(request)
     if not search_req.query or len(search_req.query.strip()) == 0:
         raise HTTPException(status_code=400, detail="Empty query")
     try:
