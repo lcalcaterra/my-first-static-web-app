@@ -1,0 +1,28 @@
+{
+  "routes": [
+    {
+      "route": "/api/ai/*",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/storage/*",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/logs",
+      "allowedRoles": ["anonymous"]
+    },
+    {
+      "route": "/api/elastic/*",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/api/users/me",
+      "allowedRoles": ["authenticated"]
+    },
+    {
+      "route": "/*",
+      "serve": "/index.html"
+    }
+  ]
+}
