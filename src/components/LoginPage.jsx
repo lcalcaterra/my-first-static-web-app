@@ -16,9 +16,15 @@ export default function LoginPage({ onLoginSuccess }) {
       return;
     }
 
-    const validUsername = /^[a-zA-Z0-9_]{3,16}$/.test(username);
+    const validUsername = /^[a-zA-Z0-9_]{4,16}$/.test(username);
     if (!validUsername) {
       setError("Invalid username format");
+      return;
+    }
+
+    const validPassword = /^[a-zA-Z0-9_]{4,16}$/.test(password);
+    if (!validPassword) {
+      setError("Invalid password format");
       return;
     }
 
